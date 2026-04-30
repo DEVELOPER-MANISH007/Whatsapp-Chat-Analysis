@@ -156,3 +156,55 @@ def monthly_activity_map(selected_user,df):
     if selected_user != 'Overall':
         df = df[df['user'] == selected_user]
     return df['month'].value_counts()
+
+
+def activity_heatmap(selected_user,df):
+      if selected_user != 'Overall':
+        df = df[df['user'] == selected_user]
+      activity_heatmap =     df.pivot_table(
+        index='day_name',
+        columns='period',
+        values='message',
+        aggfunc='count'   # ← yahan comma lagaya
+    ).fillna(0)
+
+      return activity_heatmap
+
+
+def hourly_activity(selected_user, df):
+    if selected_user != 'Overall':
+        df = df[df['user'] == selected_user]
+    return df['hour'].value_counts().sort_index()
+
+
+def additional_stats(selected_user, df):
+    if selected_user != 'Overall':
+        df = df[df['user'] == selected_user]
+
+    if df.empty:
+        return 0.0, 0
+
+    message_lengths = df['message'].fillna('').apply(lambda x: len(x.split()))
+    avg_words_per_message = round(message_lengths.mean(), 2)
+    longest_message_words = int(message_lengths.max())
+    return avg_words_per_message, longest_message_words
+
+
+def links_dataframe(selected_user, df):
+    if selected_user != 'Overall':
+        df = df[df['user'] == selected_user]
+
+    extractor = URLExtract()
+    rows = []
+    for _, row in df.iterrows():
+        links = extractor.find_urls(str(row['message']))
+        for link in links:
+            rows.append(
+                {
+                    'date': row['date'],
+                    'user': row['user'],
+                    'link': link,
+                }
+            )
+
+    return pd.DataFrame(rows)
